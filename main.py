@@ -14,15 +14,15 @@ from src import (
 def main():
     print("--- STARTING MOVIE DATA PIPELINE ---")
     
-    # Step 1: Download
-    try:
-        step1.download_data()
-    except Exception as e:
-        print(f"Extraction Step failed: {e}. Ensure Kaggle API is configured.")
+    # # Step 1: Download
+    # try:
+    #     step1.download_data()
+    # except Exception as e:
+    #     print(f"Extraction Step failed: {e}. Ensure Kaggle API is configured.")
 
-    # Step 2: Cleaning
-    print("\n--- STEP 2: DATA CLEANING ---")
-    step2.clean_data()
+    # # Step 2: Cleaning
+    # print("\n--- STEP 2: DATA CLEANING ---")
+    # step2.clean_data()
 
     # Step 3: Visualization
     print("\n--- STEP 3: DATA VISUALIZATION ---")

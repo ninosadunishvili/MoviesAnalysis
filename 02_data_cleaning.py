@@ -3,7 +3,7 @@ import pandas as pd
 
  
 # CONFIG
-DATASET_PATH = "C:/Users/nagli/.cache/kagglehub/datasets/mohsin31202/top-rated-movies-dataset/versions/2"   # <-- CHANGE THIS
+DATASET_PATH = "data/raw"
 OUTPUT_PATH = "data/processed"
 CSV_FILENAME = "Movies_dataset.csv"
 CURRENT_YEAR = 2026

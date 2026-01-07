@@ -3,24 +3,15 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# ===============================
-# CONFIG
-# ===============================
 DATA_PATH = "data/processed/clean_movies.csv"
 FIGURES_PATH = "reports/figures"
-
 os.makedirs(FIGURES_PATH, exist_ok=True)
 
-# ===============================
-# LOAD CLEAN DATA
-# ===============================
 df = pd.read_csv(DATA_PATH)
 
-# ===============================
-# VISUALIZATION 1: RATING DISTRIBUTION
-# ===============================
+# VIS 1: Rating distribution
 plt.figure(figsize=(8, 5))
-plt.hist(df["vote_average"], bins=20)
+plt.hist(df["vote_average"].dropna(), bins=20)
 plt.title("Distribution of Movie Ratings")
 plt.xlabel("Rating")
 plt.ylabel("Number of Movies")
@@ -28,46 +19,49 @@ plt.tight_layout()
 plt.savefig(os.path.join(FIGURES_PATH, "rating_distribution.png"))
 plt.show()
 
-# ===============================
-# VISUALIZATION 2: RATING VS VOTES
-# ===============================
-plt.figure(figsize=(8, 5))
-plt.scatter(df["vote_count"], df["vote_average"], alpha=0.6, s=10)
+# VIS 2: Average rating by release year
+df["release_date"] = pd.to_datetime(df["release_date"], errors="coerce")
+df["release_year"] = df["release_date"].dt.year
 
-# Linear trendline
-coefficients = np.polyfit(df["vote_count"], df["vote_average"], 1)
-x_vals = np.linspace(df["vote_count"].min(), df["vote_count"].max(), 200)
-y_vals = np.polyval(coefficients, x_vals)
-plt.plot(x_vals, y_vals)
+yearly_avg_rating = (
+    df.dropna(subset=["release_year", "vote_average"])
+      .groupby("release_year")["vote_average"]
+      .mean()
+)
 
-plt.title("Rating vs Number of Votes")
-plt.xlabel("Votes")
-plt.ylabel("Rating")
+plt.figure(figsize=(9, 5))
+plt.plot(yearly_avg_rating.index, yearly_avg_rating.values, marker="o")
+plt.title("Average Movie Rating by Release Year")
+plt.xlabel("Release Year")
+plt.ylabel("Average Rating")
 plt.tight_layout()
-plt.savefig(os.path.join(FIGURES_PATH, "rating_vs_votes.png"))
+plt.savefig(os.path.join(FIGURES_PATH, "avg_rating_by_year.png"))
 plt.show()
 
-# ===============================
-# VISUALIZATION 3: CORRELATION HEATMAP
-# ===============================
+# VIS 3: Correlation heatmap of numeric features
 numeric_df = df.select_dtypes(include="number")
-correlation_matrix = numeric_df.corr()
+corr = numeric_df.corr()
 
 plt.figure(figsize=(8, 6))
-plt.imshow(correlation_matrix)
+plt.imshow(corr, aspect="auto")
 plt.colorbar(label="Correlation")
-
-plt.xticks(
-    ticks=range(len(numeric_df.columns)),
-    labels=numeric_df.columns,
-    rotation=90
-)
-plt.yticks(
-    ticks=range(len(numeric_df.columns)),
-    labels=numeric_df.columns
-)
-
+plt.xticks(ticks=range(len(numeric_df.columns)), labels=numeric_df.columns, rotation=90)
+plt.yticks(ticks=range(len(numeric_df.columns)), labels=numeric_df.columns)
 plt.title("Correlation Heatmap of Numeric Features")
 plt.tight_layout()
 plt.savefig(os.path.join(FIGURES_PATH, "correlation_heatmap.png"))
 plt.show()
+
+stats = df["vote_average"].describe()
+print(stats)
+
+q1 = stats["25%"]
+q3 = stats["75%"]
+iqr = q3 - q1
+
+outliers = df[
+    (df["vote_average"] < q1 - 1.5 * iqr) |
+    (df["vote_average"] > q3 + 1.5 * iqr)
+]
+
+print("Number of rating outliers:", len(outliers))

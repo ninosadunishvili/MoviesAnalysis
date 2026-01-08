@@ -48,5 +48,44 @@ def run_visualizations():
 
     print(f"Visualizations successfully saved to {FIGURES_PATH}")
 
+    # VIS 4: Count Plot (Volume of Top Rated Movies)
+    # Insight: Shows the proportion of movies that actually reach 'High' status.
+    plt.figure(figsize=(8, 6))
+    sns.countplot(data=df, x="rating_category", hue="rating_category", palette="magma", legend=False)
+    plt.title("Count of Movies by Rating Category")
+    plt.xlabel("Rating Category")
+    plt.ylabel("Number of Movies")
+    plt.tight_layout()
+    plt.savefig(os.path.join(FIGURES_PATH, "rating_category_counts.png"))
+    plt.close()
+
+    # VIS 5: Scatter Plot with Trend Line (Rating vs Vote Count)
+    # Insight: Do the highest-rated movies have a strong consensus (many votes)?
+    plt.figure(figsize=(10, 6))
+    sns.regplot(data=df, x="vote_average", y="vote_count",
+                scatter_kws={'alpha':0.3, 'color':'teal'},
+                line_kws={'color':'red'})
+    plt.title("Movie Rating vs. Vote Count (Consensus)")
+    plt.xlabel("Vote Average")
+    plt.ylabel("Number of Votes")
+    plt.tight_layout()
+    plt.savefig(os.path.join(FIGURES_PATH, "rating_vs_votes_trend.png"))
+    plt.close()
+
+    # VIS 6: Violin Plot (Movie Age by Rating Category)
+    # Insight: Visualizes if 'High' rated movies are typically older classics or newer releases.
+    plt.figure(figsize=(10, 6))
+    sns.violinplot(data=df, x="rating_category", y="movie_age", hue="rating_category",
+                   palette="Set2", legend=False)
+    plt.title("Distribution of Movie Age across Rating Categories")
+    plt.xlabel("Rating Category")
+    plt.ylabel("Years Since Release")
+    plt.tight_layout()
+    plt.savefig(os.path.join(FIGURES_PATH, "age_rating_violin.png"))
+    plt.close()
+
+
+    print(f"6 Visualizations successfully saved to {FIGURES_PATH}")
+
 if __name__ == "__main__":
     run_visualizations()

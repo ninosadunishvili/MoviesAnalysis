@@ -24,9 +24,9 @@ def main():
     # print("\n--- STEP 2: DATA CLEANING ---")
     # step2.clean_data()
 
-    # Step 3: Visualization
-    print("\n--- STEP 3: DATA VISUALIZATION ---")
-    step3.run_visualizations()
+    # # Step 3: Visualization
+    # print("\n--- STEP 3: DATA VISUALIZATION ---")
+    # step3.run_visualizations()
 
     # Step 4: Machine Learning
     print("\n--- STEP 4: MACHINE LEARNING ---")

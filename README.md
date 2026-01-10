@@ -71,10 +71,4 @@ Visualization: Run 03_data_visualization.py to generate statistical plots.
 
 Machine Learning: Run 04_machine_learning.py to train and evaluate models.
 
-## 6. Results Summary
-
-(To be completed upon final analysis)
-EDA Findings: Initial analysis shows [e.g., a strong correlation between vote count and rating].
-ML Performance: Compared Linear Regression and Decision Tree models. The [Model Name] performed best with an R-squared of [X.XX].
-
 ---

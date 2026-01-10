@@ -1,86 +1,92 @@
 import os
 import pandas as pd
+import numpy as np
 
 def clean_data():
+    """
+    Performs end-to-end data cleaning, tracks quality metrics, and generates a report.
+    """
     # CONFIG
-    DATASET_PATH = "data/raw"
-    OUTPUT_PATH = "data/processed"
+    RAW_PATH = "data/raw"
+    PROC_PATH = "data/processed"
+    REP_PATH = "reports/data_quality"
     CSV_FILENAME = "Movies_dataset.csv"
-    CURRENT_YEAR = 2026
+    os.makedirs(PROC_PATH, exist_ok=True)
+    os.makedirs(REP_PATH, exist_ok=True)
 
-    os.makedirs(OUTPUT_PATH, exist_ok=True)
+    input_file = os.path.join(RAW_PATH, CSV_FILENAME)
+    
+    try:
+        if not os.path.exists(input_file):
+            raise FileNotFoundError(f"Source file {input_file} not found.")
+        
+        df = pd.read_csv(input_file)
+        
+        # --- DATA QUALITY TRACKING (Initial State) ---
+        report = []
+        report.append("=== DATA QUALITY & CLEANING REPORT ===")
+        report.append(f"Initial Shape: {df.shape}")
+        report.append(f"Initial Missing Values:\n{df.isnull().sum().to_string()}")
+        report.append(f"Initial Duplicates: {df.duplicated().sum()}")
 
-    # 1. LOAD DATA
-    # The Kaggle dataset usually has a specific name, adjust if necessary
-    input_file = os.path.join(DATASET_PATH, CSV_FILENAME)
-    if not os.path.exists(input_file):
-        print(f"Error: {input_file} not found!")
-        return
+        # 1. Clean Column Names (FIXED LINE BELOW)
+        df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
 
-    df = pd.read_csv(input_file)
-    print(f"Initial shape: {df.shape}")
+        # 2. Remove Duplicates
+        df = df.drop_duplicates()
 
-    # 2. CLEAN COLUMN NAMES
-    df.columns = (
-        df.columns
-        .str.strip()
-        .str.lower()
-        .str.replace(" ", "_")
-    )
+        # 3. Handle Missing Values
+        num_cols = df.select_dtypes(include="number").columns
+        for col in num_cols:
+            df[col] = df[col].fillna(df[col].median())
+            
+        cat_cols = df.select_dtypes(include="object").columns
+        for col in cat_cols:
+            df[col] = df[col].fillna("Unknown")
 
-    # 3. REMOVE DUPLICATES
-    df = df.drop_duplicates()
+        # 4. Outlier Removal (IQR Method)
+        outlier_count = 0
+        for col in ["vote_average", "vote_count"]:
+            if col in df.columns:
+                # Ensure column is numeric before IQR
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+                q1, q3 = df[col].quantile(0.25), df[col].quantile(0.75)
+                iqr = q3 - q1
+                lower, upper = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+                before_count = len(df)
+                df = df[(df[col] >= lower) & (df[col] <= upper)]
+                outlier_count += (before_count - len(df))
 
-    # 4. HANDLE MISSING VALUES
-    # Numeric columns → median
-    num_cols = df.select_dtypes(include="number").columns
-    df[num_cols] = df[num_cols].fillna(df[num_cols].median())
+        # 5. Feature Engineering
+        if "release_date" in df.columns:
+            df["release_date"] = pd.to_datetime(df["release_date"], errors="coerce")
+            df["year"] = df["release_date"].dt.year
+            df["movie_age"] = 2026 - df["year"]
+            
+        if "vote_average" in df.columns:
+            df["rating_category"] = pd.cut(
+                df["vote_average"], bins=[0, 6, 7.5, 10], labels=["Low", "Medium", "High"]
+            )
 
-    # Categorical columns → "Unknown"
-    cat_cols = df.select_dtypes(include="object").columns
-    df[cat_cols] = df[cat_cols].fillna("Unknown")
+        # --- DATA QUALITY TRACKING (Final State) ---
+        report.append("\n=== CLEANING STEPS APPLIED ===")
+        report.append("- Normalized column names to snake_case using .str accessor.")
+        report.append("- Imputed numeric missing values with Median.")
+        report.append("- Imputed categorical missing values with 'Unknown'.")
+        report.append(f"- Removed {outlier_count} outliers using IQR method.")
+        report.append(f"\nFinal Shape: {df.shape}")
+        report.append(f"Final Missing Values: {df.isnull().sum().sum()}")
 
-    # 5. FIX DATA TYPES (Synchronizing with ML script needs)
-    cols_to_fix = ["vote_average", "vote_count", "popularity", "revenue"]
-    for col in cols_to_fix:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+        # Save Report
+        with open(os.path.join(REP_PATH, "data_quality_report.txt"), "w") as f:
+            f.write("\n".join(report))
 
-    # Re-fill numeric NaNs created by coercion
-    df[num_cols] = df[num_cols].fillna(df[num_cols].median())
+        # Save Clean Data
+        output_file = os.path.join(PROC_PATH, "clean_movies.csv")
+        df.to_csv(output_file, index=False)
+        print(f"Success: Data Quality Report generated in {REP_PATH}")
+        return df
 
-    # 6. OUTLIER REMOVAL (IQR METHOD)
-    def remove_outliers_iqr(data, column):
-        Q1 = data[column].quantile(0.25)
-        Q3 = data[column].quantile(0.75)
-        IQR = Q3 - Q1
-        lower = Q1 - 1.5 * IQR
-        upper = Q3 + 1.5 * IQR
-        return data[(data[column] >= lower) & (data[column] <= upper)]
-
-    # We apply this to vote_average and vote_count to clean the distribution for ML
-    for col in ["vote_average", "vote_count"]:
-        if col in df.columns:
-            df = remove_outliers_iqr(df, col)
-
-    # 7. FEATURE ENGINEERING
-    if "release_date" in df.columns:
-        df["release_date"] = pd.to_datetime(df["release_date"], errors="coerce")
-        df["year"] = df["release_date"].dt.year
-        df["movie_age"] = CURRENT_YEAR - df["year"]
-
-    if "vote_average" in df.columns:
-        df["rating_category"] = pd.cut(
-            df["vote_average"],
-            bins=[0, 6, 7.5, 10],
-            labels=["Low", "Medium", "High"]
-        )
-
-    # 8. SAVE CLEAN DATA
-    output_file = os.path.join(OUTPUT_PATH, "clean_movies.csv")
-    df.to_csv(output_file, index=False)
-    print(f"Final shape: {df.shape}")
-    print(f"Clean dataset saved to {output_file}")
-
-if __name__ == "__main__":
-    clean_data()
+    except Exception as e:
+        print(f"Error during data cleaning: {e}")
+        raise

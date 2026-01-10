@@ -4,6 +4,22 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 def run_visualizations():
+    """
+    Generates 6 mandatory visualizations for EDA and saves them to reports/figures.
+
+    Parameters:
+    -----------
+    None (Loads clean_movies.csv from data/processed)
+
+    Returns:
+    --------
+    None (Saves .png files to disk)
+
+    Raises:
+    -------
+    IOError
+        If the cleaned data file cannot be read or output directory is inaccessible.
+    """
     DATA_PATH = "data/processed/clean_movies.csv"
     FIGURES_PATH = "reports/figures"
     os.makedirs(FIGURES_PATH, exist_ok=True)

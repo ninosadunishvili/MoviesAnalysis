@@ -78,12 +78,12 @@ def run_visualizations():
     # VIS 5: Scatter Plot with Trend Line (Rating vs Vote Count)
     # Insight: Do the highest-rated movies have a strong consensus (many votes)?
     plt.figure(figsize=(10, 6))
-    sns.regplot(data=df, x="vote_average", y="vote_count",
+    sns.regplot(data=df, x="vote_count", y="vote_average",
                 scatter_kws={'alpha':0.3, 'color':'teal'},
                 line_kws={'color':'red'})
     plt.title("Movie Rating vs. Vote Count (Consensus)")
-    plt.xlabel("Vote Average")
-    plt.ylabel("Number of Votes")
+    plt.xlabel("Number of Votes")
+    plt.ylabel("Vote Average")
     plt.tight_layout()
     plt.savefig(os.path.join(FIGURES_PATH, "rating_vs_votes_trend.png"))
     plt.close()

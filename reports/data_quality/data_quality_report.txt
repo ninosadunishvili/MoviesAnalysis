@@ -1,0 +1,22 @@
+=== DATA QUALITY & CLEANING REPORT ===
+Initial Shape: (10000, 9)
+Initial Missing Values:
+id                   0
+original_title       0
+original_language    0
+genre                3
+overview             1
+popularity           0
+vote_count           0
+vote_average         0
+release_date         2
+Initial Duplicates: 3
+
+=== CLEANING STEPS APPLIED ===
+- Normalized column names to snake_case using .str accessor.
+- Imputed numeric missing values with Median.
+- Imputed categorical missing values with 'Unknown'.
+- Removed 1136 outliers using IQR method.
+
+Final Shape: (8861, 12)
+Final Missing Values: 6
